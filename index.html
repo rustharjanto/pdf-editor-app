@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>PDF Editor</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        /* Simple inline styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+        
+        /* Button styles */
+        .btn-icon {
+            padding: 8px;
+            border-radius: 8px;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-icon:hover {
+            background: #e5e7eb;
+        }
+        
+        .btn-icon.active-mode {
+            background: #dbeafe;
+            color: #1d4ed8;
+            border-color: #93c5fd;
+        }
+        
+        .tool-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: white;
+            border: 1px solid #d1d5db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            touch-action: manipulation;
+        }
+        
+        .tool-btn:hover {
+            background: #f9fafb;
+            transform: scale(1.05);
+        }
+        
+        .tool-btn.active {
+            background: #dbeafe;
+            border-color: #3b82f6;
+            color: #1d4ed8;
+        }
+        
+        .tool-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Canvas styles */
+        .canvas-container {
+            display: inline-block;
+            position: relative;
+            margin: 20px auto;
+            touch-action: none;
+            user-select: none;
+            transform-origin: 0 0;
+        }
+        
+        #pdfCanvas {
+            display: block;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background: white;
+            max-width: 100%;
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        #overlayCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        /* Loading spinner */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Toolbar */
+        .toolbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            padding: 12px;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+        }
+        
+        .toolbar.visible {
+            transform: translateY(0);
+        }
+        
+        .toolbar-grid {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        /* Page Navigation */
+        .page-navigation {
+            position: fixed;
+            top: 70px;
+            left: 0;
+            right: 0;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 50;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Zoom Controls */
+        .zoom-controls {
+            position: fixed;
+            bottom: 70px;
+            right: 20px;
+            background: white;
+            border-radius: 24px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 90;
+            border: 1px solid #e5e7eb;
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .canvas-container {
+                overflow: visible !important;
+            }
+            
+            #pdfCanvas, #overlayCanvas {
+                max-width: 100% !important;
+                height: auto !important;
+            }
+            
+            .tool-btn {
+                width: 48px;
+                height: 48px;
+                font-size: 16px;
+            }
+            
+            .toolbar-grid {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            .toolbar {
+                padding: 8px;
+            }
+            
+            .btn-icon span, .tool-btn span {
+                display: none;
+            }
+            
+            .page-navigation {
+                top: 60px;
+                padding: 6px 12px;
+            }
+            
+            .zoom-controls {
+                bottom: 120px;
+                right: 10px;
+            }
+            
+            .size-controls {
+                position: absolute;
+                top: -60px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: white;
+                padding: 8px 12px;
+                border-radius: 12px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                border: 1px solid #e5e7eb;
+                min-width: 150px;
+                z-index: 110;
+            }
+        }
+        
+        /* PDF Container with scroll */
+        #pdfContainer {
+            height: calc(100vh - 120px);
+            background: #f3f4f6;
+            overflow: auto;
+            position: relative;
+            touch-action: pan-y pinch-zoom;
+            padding: 20px;
+        }
+        
+        #pagesContainer {
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px 0;
+            transition: transform 0.1s ease-out;
+        }
+        
+        .page-wrapper {
+            position: relative;
+            margin: 0 auto;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background: white;
+            overflow: hidden;
+        }
+        
+        .page-canvas {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            pointer-events: none;
+        }
+        
+        .page-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: auto;
+            cursor: crosshair;
+            z-index: 10;
+        }
+        
+        /* Utility classes */
+        .hidden {
+            display: none !important;
+        }
+        
+        .flex-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        /* Zoom indicator */
+        .zoom-indicator {
+            position: fixed;
+            bottom: 70px;
+            left: 20px;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            font-weight: 500;
+            color: #374151;
+            z-index: 90;
+            border: 1px solid #e5e7eb;
+        }
+        
+        /* Scroll to top button */
+        .scroll-top-btn {
+            position: fixed;
+            bottom: 120px;
+            left: 20px;
+            background: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+            cursor: pointer;
+            z-index: 90;
+        }
+        
+        /* Page number indicator */
+        .page-indicator {
+            background: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Debug info */
+        .debug-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 9999;
+            max-width: 300px;
+            display: none;
+        }
+        
+        /* Touch optimization */
+        .touch-optimized {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        /* Size Controls */
+        .size-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 8px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .size-slider {
+            width: 80px;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: #d1d5db;
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        .size-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+        }
+        
+        .size-slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .size-label {
+            font-size: 12px;
+            color: #374151;
+            min-width: 40px;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        /* Pan indicator */
+        .pan-indicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .pan-indicator.visible {
+            opacity: 1;
+        }
+        
+        /* Gesture overlay */
+        .gesture-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 5;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="touch-optimized">
+    <!-- Debug Info -->
+    <div id="debugInfo" class="debug-info"></div>
+    
+    <!-- Pan Indicator -->
+    <div id="panIndicator" class="pan-indicator">Menggeser...</div>
+    
+    <!-- Gesture Overlay -->
+    <div id="gestureOverlay" class="gesture-overlay"></div>
+    
+    <!-- Simple Header -->
+    <div style="background: white; border-bottom: 1px solid #e5e7eb; padding: 12px 16px; position: sticky; top: 0; z-index: 50;">
+        <div style="display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="background: #eff6ff; padding: 8px; border-radius: 8px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2">
+                        <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div style="font-weight: 600; color: #1f2937; font-size: 18px;">PDF Editor</div>
+                    <div style="font-size: 12px; color: #6b7280;">Edit dan tanda tangan PDF</div>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 8px;">
+                <label class="btn-icon" for="pdfUpload">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                    <span style="margin-left: 4px; display: none;">Upload</span>
+                    <input id="pdfUpload" type="file" accept=".pdf" style="display: none;">
+                </label>
+                
+                <button id="editToggle" class="btn-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    <span style="margin-left: 4px; display: none;">Edit</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- File Info -->
+        <div id="fileInfo" style="font-size: 14px; color: #4b5563; margin-top: 8px; text-align: center; display: none;"></div>
+    </div>
+
+    <!-- Page Navigation -->
+    <div id="pageNavigation" class="page-navigation hidden">
+        <button id="prevPageBtn" class="btn-icon" disabled>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 19l-7-7 7-7"/>
+            </svg>
+        </button>
+        
+        <div class="page-indicator">
+            <span id="currentPageDisplay">1</span> / <span id="totalPagesDisplay">1</span>
+        </div>
+        
+        <button id="nextPageBtn" class="btn-icon" disabled>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 5l7 7-7 7"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Main Content -->
+    <div id="pdfContainer">
+        <!-- Pages Container -->
+        <div id="pagesContainer"></div>
+        
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="hidden" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.9); display: flex; align-items: center; justify-content: center; z-index: 10;">
+            <div class="text-center">
+                <div class="spinner" style="margin: 0 auto 16px;"></div>
+                <div style="color: #4b5563; font-weight: 500;">Memuat PDF...</div>
+            </div>
+        </div>
+        
+        <!-- Empty State -->
+        <div id="emptyState" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; padding: 20px;">
+            <div class="text-center" style="max-width: 400px;">
+                <div style="width: 80px; height: 80px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5">
+                        <path d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+                <h3 style="font-size: 20px; font-weight: 600; color: #1f2937; margin-bottom: 8px;">Upload PDF</h3>
+                <p style="color: #6b7280; margin-bottom: 24px; line-height: 1.5;">Upload file PDF untuk mulai mengedit dan menambahkan tanda tangan</p>
+                <label for="pdfUpload" style="display: inline-flex; align-items: center; background: #3b82f6; color: white; padding: 12px 24px; border-radius: 8px; font-weight: 500; cursor: pointer; touch-action: manipulation;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
+                        <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                    Pilih File PDF
+                </label>
+                <p style="font-size: 12px; color: #9ca3af; margin-top: 12px;">Maksimal 20MB • Format PDF</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scroll to Top Button -->
+    <button id="scrollTopBtn" class="scroll-top-btn hidden">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2">
+            <path d="M5 15l7-7 7 7"/>
+        </svg>
+    </button>
+
+    <!-- Zoom Indicator -->
+    <div id="zoomIndicator" class="zoom-indicator hidden">
+        <span id="zoomPercentage">100%</span>
+    </div>
+
+    <!-- Zoom Controls -->
+    <div id="zoomControls" class="zoom-controls hidden">
+        <button id="zoomInBtn" class="tool-btn" title="Perbesar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"/>
+            </svg>
+        </button>
+        
+        <button id="zoomOutBtn" class="tool-btn" title="Perkecil">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM7 10h6"/>
+            </svg>
+        </button>
+        
+        <button id="zoomFitBtn" class="tool-btn" title="Pas ke layar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16v16H4zM8 12h8M12 8v8"/>
+            </svg>
+        </button>
+        
+        <button id="zoomResetBtn" class="tool-btn" title="Reset zoom">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 12a9 9 0 1018 0 9 9 0 00-18 0zM9 9l6 6m0-6l-6 6"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Bottom Toolbar -->
+    <div id="toolbar" class="toolbar">
+        <div class="toolbar-grid">
+            <!-- Draw Button -->
+            <button id="drawBtn" class="tool-btn" title="Gambar">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                </svg>
+            </button>
+            
+            <!-- Text Button -->
+            <button id="textBtn" class="tool-btn" title="Teks">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                </svg>
+            </button>
+            
+            <!-- Color Picker -->
+            <input type="color" id="colorPicker" value="#000000" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid #e5e7eb; cursor: pointer; touch-action: manipulation;" title="Warna">
+            
+            <!-- Brush Size Control -->
+            <div id="brushSizeControl" class="size-controls hidden">
+                <span style="font-size: 12px; color: #374151;">●</span>
+                <input type="range" id="brushSizeSlider" class="size-slider" min="1" max="20" value="2" title="Ketebalan Coretan">
+                <span id="brushSizeLabel" class="size-label">2px</span>
+            </div>
+            
+            <!-- Font Size Control -->
+            <div id="fontSizeControl" class="size-controls hidden">
+                <span style="font-size: 12px; color: #374151;">A</span>
+                <input type="range" id="fontSizeSlider" class="size-slider" min="8" max="72" value="20" title="Ukuran Font">
+                <span id="fontSizeLabel" class="size-label">20px</span>
+            </div>
+            
+            <!-- Undo -->
+            <button id="undoBtn" class="tool-btn" title="Undo" disabled>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                </svg>
+            </button>
+            
+            <!-- Redo -->
+            <button id="redoBtn" class="tool-btn" title="Redo" disabled>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10h-6a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6"/>
+                </svg>
+            </button>
+            
+            <!-- Clear -->
+            <button id="clearBtn" class="tool-btn" title="Hapus">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+            </button>
+            
+            <!-- Save -->
+            <button id="saveBtn" style="display: flex; align-items: center; background: #10b981; color: white; padding: 10px 20px; border-radius: 8px; border: none; font-weight: 500; cursor: pointer; touch-action: manipulation;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
+                    <path d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                </svg>
+                Simpan
+            </button>
+        </div>
+    </div>
+
+    <!-- Text Modal -->
+    <div id="textModal" class="hidden modal-overlay">
+        <div class="modal-content">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1f2937; margin-bottom: 16px;">Tambah Teks</h3>
+            <input type="text" id="textInput" placeholder="Ketik teks di sini..." 
+                   style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; margin-bottom: 20px; font-size: 16px;">
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <button id="cancelTextBtn" style="padding: 10px 20px; color: #6b7280; background: none; border: none; font-weight: 500; cursor: pointer;">Batal</button>
+                <button id="addTextBtn" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: 500; cursor: pointer;">Tambah</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script type="module">
+        import { PDFEditorApp } from './src/js/main.js';
+        
+        // Inisialisasi aplikasi saat DOM siap
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded, initializing PDF Editor App');
+            new PDFEditorApp();
+        });
+        
+        // Tambahkan debug mode dengan Ctrl+Shift+D
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+                const debugInfo = document.getElementById('debugInfo');
+                debugInfo.style.display = debugInfo.style.display === 'none' ? 'block' : 'none';
+                console.log('Debug mode toggled');
+            }
+        });
+    </script>
+</body>
+</html>

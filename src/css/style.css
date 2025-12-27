@@ -1,0 +1,158 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    body {
+        @apply antialiased;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    input, button, textarea, select {
+        @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50;
+    }
+}
+
+@layer components {
+    /* Button Styles */
+    .btn {
+        @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200;
+    }
+    
+    .btn-primary {
+        @apply bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800;
+    }
+    
+    .btn-secondary {
+        @apply bg-gray-200 text-gray-800 hover:bg-gray-300 active:bg-gray-400;
+    }
+    
+    .btn-icon {
+        @apply p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors flex items-center justify-center;
+    }
+    
+    .btn-icon.active-mode {
+        @apply bg-blue-100 text-blue-600 border border-blue-300;
+    }
+    
+    .tool-btn {
+        @apply p-3 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed;
+        min-width: 48px;
+        min-height: 48px;
+    }
+    
+    .tool-btn.active {
+        @apply bg-blue-100 text-blue-600 border-2 border-blue-300;
+    }
+    
+    /* Animation Classes */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes slideUp {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+    }
+    
+    @keyframes slideDown {
+        from { transform: translateY(0); }
+        to { transform: translateY(100%); }
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .animate-fadeIn {
+        animation: fadeIn 0.3s ease-out;
+    }
+    
+    .animate-slideUp {
+        animation: slideUp 0.3s ease-out;
+    }
+    
+    .animate-slideDown {
+        animation: slideDown 0.3s ease-out;
+    }
+    
+    .spinner {
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top: 3px solid white;
+        width: 20px;
+        height: 20px;
+        animation: spin 1s linear infinite;
+    }
+    
+    /* Canvas Container */
+    #pdfContainer {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 #f1f5f9;
+    }
+    
+    #pdfContainer::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    #pdfContainer::-webkit-scrollbar-track {
+        @apply bg-gray-100;
+    }
+    
+    #pdfContainer::-webkit-scrollbar-thumb {
+        @apply bg-gray-400 rounded;
+    }
+    
+    #pdfContainer::-webkit-scrollbar-thumb:hover {
+        @apply bg-gray-500;
+    }
+    
+    /* Canvas */
+    #pdfCanvas {
+        max-width: 100%;
+        height: auto;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        background: white;
+        touch-action: manipulation;
+    }
+    
+    #overlayCanvas {
+        pointer-events: none;
+        touch-action: none;
+    }
+    
+    /* Loading Animation */
+    .loading-spinner {
+        border: 4px solid rgba(59, 130, 246, 0.1);
+        border-radius: 50%;
+        border-top: 4px solid #3b82f6;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+    }
+    
+    /* Utility Classes */
+    .hidden {
+        display: none !important;
+    }
+    
+    .flex-center {
+        @apply flex items-center justify-center;
+    }
+    
+    /* Mobile optimizations */
+    @media (max-width: 640px) {
+        .tool-btn {
+            min-width: 44px;
+            min-height: 44px;
+            padding: 10px;
+        }
+        
+        #pdfContainer {
+            height: calc(100vh - 120px);
+        }
+    }
+}
