@@ -35,5 +35,14 @@
       "url": "/pdf-editor-app/?action=new",
       "icons": [{ "src": "/pdf-editor-app/icons/icon-96x96.png", "sizes": "96x96" }]
     }
+ ],
+  // TAMBAHKAN INI untuk file handling
+  "file_handlers": [
+    {
+      "action": "/pdf-editor-app/",
+      "accept": {
+        "application/pdf": [".pdf"]
+      }
+    }
   ]
 }
