@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="description" content="Editor PDF dengan tanda tangan digital - Bekerja Offline">
-    <meta name="keywords" content="PDF, editor, tanda tangan, digital, offline">
+    <meta name="keywords" content="PDF, editor, tanda tangan, digital, offline, Android, open PDF">
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="/pdf-editor-app/assets/manifest-pffKDuDT.json">
@@ -20,6 +20,17 @@
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/pdf-editor-app/assets/icon-192x192-FnekWiEy.png">
+    
+    <!-- Load PDF.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        // Expose pdfjsLib to global window
+        window.pdfjsLib = pdfjsLib;
+        // Set worker source
+        if (pdfjsLib.GlobalWorkerOptions) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -582,8 +593,24 @@
         .offline-warning.show {
             transform: translateY(0);
         }
+        
+        /* File Handling Status */
+        .file-handling-status {
+            position: fixed;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #3b82f6;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
     </style>
-  <script type="module" crossorigin src="/pdf-editor-app/assets/index-DgHhlFxf.js"></script>
+  <script type="module" crossorigin src="/pdf-editor-app/assets/main-BMVm-bdk.js"></script>
 </head>
 <body class="touch-optimized">
     <!-- Debug Info -->
@@ -591,6 +618,11 @@
     
     <!-- Network Status Indicator -->
     <div id="networkStatus" class="network-status"></div>
+    
+    <!-- File Handling Status -->
+    <div id="fileHandlingStatus" class="file-handling-status">
+        Membuka file PDF...
+    </div>
     
     <!-- Offline Warning -->
     <div id="offlineWarning" class="offline-warning">
@@ -619,7 +651,7 @@
             <div style="display: flex; align-items: center; gap: 12px;">
                 <div style="background: #eff6ff; padding: 8px; border-radius: 8px;">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2">
-                        <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2 2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
                 </div>
                 <div>

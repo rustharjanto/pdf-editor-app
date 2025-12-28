@@ -7,7 +7,8 @@
   "display": "standalone",
   "orientation": "any",
   "scope": "/pdf-editor-app/",
-  "start_url": "/pdf-editor-app/",
+  "start_url": "/pdf-editor-app/?source=pwa",
+  
   "icons": [
     {
       "src": "/pdf-editor-app/icons/icon-72x72.png",
@@ -51,14 +52,74 @@
       "type": "image/png"
     }
   ],
+  
   "categories": ["productivity", "utilities"],
+  
+  "file_handlers": [
+    {
+      "action": "/pdf-editor-app/",
+      "accept": {
+        "application/pdf": [".pdf"],
+        "application/x-pdf": [".pdf"]
+      },
+      "icons": [
+        {
+          "src": "/pdf-editor-app/icons/pdf-icon-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ],
+      "launch_type": "single-client"
+    }
+  ],
+  
+  "share_target": {
+    "action": "/pdf-editor-app/share/",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "files": [
+        {
+          "name": "file",
+          "accept": ["application/pdf", ".pdf"]
+        }
+      ]
+    }
+  },
+  
+  "protocol_handlers": [
+    {
+      "protocol": "web+pdfeditor",
+      "url": "/pdf-editor-app/?url=%s"
+    }
+  ],
+  
   "shortcuts": [
     {
-      "name": "Edit PDF Baru",
-      "short_name": "Edit PDF",
-      "description": "Upload dan edit PDF baru",
+      "name": "Buka PDF",
+      "short_name": "Buka PDF",
+      "description": "Buka dan edit file PDF",
+      "url": "/pdf-editor-app/?action=open",
+      "icons": [
+        {
+          "src": "/pdf-editor-app/icons/shortcut-open-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "PDF Baru",
+      "short_name": "Buat Baru",
+      "description": "Buat PDF baru",
       "url": "/pdf-editor-app/?action=new",
-      "icons": [{ "src": "/pdf-editor-app/icons/icon-96x96.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "/pdf-editor-app/icons/shortcut-new-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
     }
   ]
 }
