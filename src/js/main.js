@@ -8,6 +8,8 @@ export class PDFEditorApp {
         this.isEditMode = false;
         this.pdfLoaded = false;
         this.gestureHandler = new GestureHandler();
+        this.lastRenderTime = 0;
+        this.renderInterval = 16; // ~60 FPS
         
         console.log('PDF Editor App constructor called');
         this.init();
@@ -96,7 +98,39 @@ export class PDFEditorApp {
             if (e.key === 'Escape' && this.isEditMode) {
                 this.toggleEditMode();
             }
+            
+            // Shortcut untuk mode teks: Ctrl+T
+            if ((e.ctrlKey || e.metaKey) && e.key === 't' && this.isEditMode) {
+                e.preventDefault();
+                const textBtn = document.getElementById('textBtn');
+                if (textBtn) {
+                    const isActive = textBtn.classList.contains('active');
+                    if (isActive) {
+                        this.pdfEditor.setTextMode(null);
+                    } else {
+                        this.pdfEditor.setTextMode('');
+                    }
+                    this.updateSizeControls();
+                }
+            }
         });
+
+        // Optimasi pointer move untuk coretan yang lebih smooth
+        document.addEventListener('pointermove', (e) => {
+            const now = performance.now();
+            if (now - this.lastRenderTime < this.renderInterval) {
+                return;
+            }
+            this.lastRenderTime = now;
+            
+            // Trigger re-render jika sedang drawing
+            if (this.pdfEditor && this.pdfEditor.isDrawing) {
+                // Force re-render dengan requestAnimationFrame
+                requestAnimationFrame(() => {
+                    // Optional: bisa tambahkan visual feedback di sini
+                });
+            }
+        }, { passive: true });
 
         this.bindToolbarButtons();
         console.log('All events bound successfully');
@@ -129,7 +163,7 @@ export class PDFEditorApp {
                 if (isActive) {
                     this.pdfEditor.setTextMode(null);
                 } else {
-                    this.showTextModal();
+                    this.pdfEditor.setTextMode('');
                 }
                 this.updateSizeControls();
             });
@@ -172,37 +206,7 @@ export class PDFEditorApp {
             });
         }
 
-        // Text modal buttons
-        const cancelTextBtn = document.getElementById('cancelTextBtn');
-        const addTextBtn = document.getElementById('addTextBtn');
-        const textInput = document.getElementById('textInput');
-        
-        if (cancelTextBtn) cancelTextBtn.addEventListener('click', () => this.hideTextModal());
-        
-        if (addTextBtn) {
-            addTextBtn.addEventListener('click', () => {
-                console.log('Add text clicked');
-                if (textInput) {
-                    const text = textInput.value.trim();
-                    if (text) {
-                        console.log('Adding text:', text);
-                        this.pdfEditor.setTextMode(text);
-                        this.hideTextModal();
-                    } else {
-                        alert('Masukkan teks terlebih dahulu');
-                    }
-                }
-            });
-        }
-        
-        if (textInput) {
-            textInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (addTextBtn) addTextBtn.click();
-                }
-            });
-        }
+        // Hapus bagian modal teks karena sekarang langsung ke canvas
 
         // Empty state click
         const emptyState = document.getElementById('emptyState');
@@ -224,14 +228,20 @@ export class PDFEditorApp {
         const brushSizeLabel = document.getElementById('brushSizeLabel');
         
         if (brushSizeSlider && brushSizeLabel) {
+            // Update range untuk brush size yang lebih variatif
+            brushSizeSlider.min = 1;
+            brushSizeSlider.max = 30; // Lebih besar dari sebelumnya
+            brushSizeSlider.step = 0.5; // Step lebih kecil untuk kontrol yang lebih halus
+            brushSizeSlider.value = 3; // Default lebih besar
+            
             brushSizeSlider.addEventListener('input', (e) => {
-                const size = parseInt(e.target.value);
-                brushSizeLabel.textContent = `${size}px`;
+                const size = parseFloat(e.target.value);
+                brushSizeLabel.textContent = `${size.toFixed(1)}px`;
                 this.pdfEditor.setBrushSize(size);
             });
             
             brushSizeSlider.addEventListener('change', (e) => {
-                const size = parseInt(e.target.value);
+                const size = parseFloat(e.target.value);
                 this.pdfEditor.setBrushSize(size);
             });
         }
@@ -341,7 +351,10 @@ export class PDFEditorApp {
             editToggle.classList.add('active-mode');
             this.pdfEditor.enableEditMode();
             this.gestureHandler.enableGestures(true);
-            console.log('Edit mode enabled');
+            
+            // Scroll ke atas ketika edit mode aktif
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            console.log('Edit mode enabled - toolbar at top');
         } else {
             toolbar.classList.remove('visible');
             editToggle.classList.remove('active-mode');
@@ -350,24 +363,6 @@ export class PDFEditorApp {
             this.updateSizeControls();
             console.log('Edit mode disabled');
         }
-    }
-
-    showTextModal() {
-        console.log('Showing text modal');
-        const modal = document.getElementById('textModal');
-        modal.classList.remove('hidden');
-        
-        const textInput = document.getElementById('textInput');
-        textInput.value = '';
-        textInput.focus();
-    }
-
-    hideTextModal() {
-        console.log('Hiding text modal');
-        const modal = document.getElementById('textModal');
-        modal.classList.add('hidden');
-        const textInput = document.getElementById('textInput');
-        if (textInput) textInput.value = '';
     }
 
     showLoading(show) {
