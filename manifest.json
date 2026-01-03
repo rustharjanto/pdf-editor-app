@@ -1,125 +1,54 @@
 {
   "name": "PDF Editor Pro",
   "short_name": "PDF Editor",
-  "description": "Editor PDF dengan tanda tangan digital - Bekerja Offline",
+  "description": "Editor PDF dengan tanda tangan digital",
   "theme_color": "#3b82f6",
   "background_color": "#ffffff",
   "display": "standalone",
-  "orientation": "any",
-  "scope": "/pdf-editor-app/",
-  "start_url": "/pdf-editor-app/?source=pwa",
-  
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
   "icons": [
     {
-      "src": "/pdf-editor-app/icons/icon-72x72.png",
+      "src": "/icons/icon-72x72.png",
       "sizes": "72x72",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/pdf-editor-app/icons/icon-96x96.png",
+      "src": "/icons/icon-96x96.png",
       "sizes": "96x96",
       "type": "image/png"
     },
     {
-      "src": "/pdf-editor-app/icons/icon-128x128.png",
+      "src": "/icons/icon-128x128.png",
       "sizes": "128x128",
       "type": "image/png"
     },
     {
-      "src": "/pdf-editor-app/icons/icon-144x144.png",
+      "src": "/icons/icon-144x144.png",
       "sizes": "144x144",
       "type": "image/png"
     },
     {
-      "src": "/pdf-editor-app/icons/icon-152x152.png",
+      "src": "/icons/icon-152x152.png",
       "sizes": "152x152",
       "type": "image/png"
     },
     {
-      "src": "/pdf-editor-app/icons/icon-192x192.png",
+      "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/pdf-editor-app/icons/icon-384x384.png",
+      "src": "/icons/icon-384x384.png",
       "sizes": "384x384",
       "type": "image/png"
     },
     {
-      "src": "/pdf-editor-app/icons/icon-512x512.png",
+      "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
-    }
-  ],
-  
-  "categories": ["productivity", "utilities"],
-  
-  "file_handlers": [
-    {
-      "action": "/pdf-editor-app/",
-      "accept": {
-        "application/pdf": [".pdf"],
-        "application/x-pdf": [".pdf"]
-      },
-      "icons": [
-        {
-          "src": "/pdf-editor-app/icons/pdf-icon-96x96.png",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ],
-      "launch_type": "single-client"
-    }
-  ],
-  
-  "share_target": {
-    "action": "/pdf-editor-app/share/",
-    "method": "POST",
-    "enctype": "multipart/form-data",
-    "params": {
-      "title": "title",
-      "text": "text",
-      "files": [
-        {
-          "name": "file",
-          "accept": ["application/pdf", ".pdf"]
-        }
-      ]
-    }
-  },
-  
-  "protocol_handlers": [
-    {
-      "protocol": "web+pdfeditor",
-      "url": "/pdf-editor-app/?url=%s"
-    }
-  ],
-  
-  "shortcuts": [
-    {
-      "name": "Buka PDF",
-      "short_name": "Buka PDF",
-      "description": "Buka dan edit file PDF",
-      "url": "/pdf-editor-app/?action=open",
-      "icons": [
-        {
-          "src": "/pdf-editor-app/icons/shortcut-open-96x96.png",
-          "sizes": "96x96"
-        }
-      ]
-    },
-    {
-      "name": "PDF Baru",
-      "short_name": "Buat Baru",
-      "description": "Buat PDF baru",
-      "url": "/pdf-editor-app/?action=new",
-      "icons": [
-        {
-          "src": "/pdf-editor-app/icons/shortcut-new-96x96.png",
-          "sizes": "96x96"
-        }
-      ]
     }
   ]
 }
